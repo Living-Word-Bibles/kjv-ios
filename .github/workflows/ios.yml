@@ -1,0 +1,43 @@
+name: iOS CI
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'  # run on version tags like v1.0.0
+
+jobs:
+  ios:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '15.4'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Generate iOS project (Capacitor)
+        run: |
+          npm run cap:add:ios
+          npm run cap:sync
+          cd ios/App && pod install --repo-update
+
+      - name: Install Ruby & Bundler
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Build & Upload TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+        run: bundle exec fastlane ios ci_release
