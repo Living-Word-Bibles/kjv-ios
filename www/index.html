@@ -25,6 +25,123 @@
 
 <!-- KJV Fancy Reader (v2.0-alpha, local/offline) — Living Word Bibles -->
 <div id="lwb-kjv-app" class="lwb-kjv"></div>
+  <!-- ===== PWA Install UI (drop-in) ===== -->
+<div id="pwa-install-strip" class="pwa-install" hidden>
+  <button id="pwa-install-btn" class="pwa-install__btn">Install App</button>
+  <button id="pwa-help-btn" class="pwa-install__link" type="button">How to install?</button>
+</div>
+
+<!-- Help / instructions modal -->
+<div id="pwa-help" class="pwa-modal" hidden>
+  <div class="pwa-modal__box">
+    <button id="pwa-help-close" class="pwa-modal__close" aria-label="Close">✕</button>
+    <h3 class="pwa-modal__title">Install “The Holy Bible: KJV”</h3>
+    <div class="pwa-modal__cols">
+      <section>
+        <h4>iPhone / iPad (Safari)</h4>
+        <ol>
+          <li>Open <strong>kjv.livingwordbibles.com</strong> in Safari.</li>
+          <li>Tap the <strong>Share</strong> icon.</li>
+          <li>Choose <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>.</li>
+        </ol>
+      </section>
+      <section>
+        <h4>Android (Chrome)</h4>
+        <ol>
+          <li>Open <strong>kjv.livingwordbibles.com</strong> in Chrome.</li>
+          <li>Tap the <strong>⋮</strong> menu.</li>
+          <li>Tap <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
+        </ol>
+      </section>
+      <section>
+        <h4>Desktop (Chrome / Edge)</h4>
+        <ol>
+          <li>Open the site.</li>
+          <li>Click the <strong>Install</strong> icon in the address bar.</li>
+        </ol>
+      </section>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ===== Install strip ===== */
+  .pwa-install{display:flex;gap:.6rem;justify-content:center;align-items:center;padding:.6rem 1rem;border-bottom:1px solid #eee;background:#fafafa}
+  .pwa-install__btn{font:inherit;border:1px solid #111;background:#111;color:#fff;border-radius:10px;padding:.48rem .9rem;cursor:pointer}
+  .pwa-install__btn:hover{opacity:.9}
+  .pwa-install__link{font:inherit;border:none;background:none;text-decoration:underline;cursor:pointer;color:#333}
+
+  /* ===== Modal ===== */
+  .pwa-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:9999}
+  .pwa-modal__box{background:#fff;max-width:720px;width:92vw;padding:1rem 1.1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);position:relative}
+  .pwa-modal__title{margin:.1rem 0 .6rem;font-weight:700}
+  .pwa-modal__close{position:absolute;top:.6rem;right:.6rem;border:1px solid #ddd;background:#f7f7f7;border-radius:10px;padding:.25rem .5rem;cursor:pointer}
+  .pwa-modal__cols{display:grid;gap:1rem}
+  .pwa-modal__cols section h4{margin:.25rem 0 .35rem}
+  .pwa-modal__cols ol{margin:.25rem 0 .25rem 1.1rem}
+  @media(min-width:760px){ .pwa-modal__cols{grid-template-columns:1fr 1fr 1fr} }
+</style>
+
+<script>
+(() => {
+  let deferredPrompt = null;
+
+  // Elements
+  const strip = document.getElementById('pwa-install-strip');
+  const btnInstall = document.getElementById('pwa-install-btn');
+  const btnHelp = document.getElementById('pwa-help-btn');
+  const modal = document.getElementById('pwa-help');
+  const close = document.getElementById('pwa-help-close');
+
+  // Helpers
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator.standalone === true);
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const showStrip = () => { if (strip) strip.hidden = false; };
+  const hideStrip = () => { if (strip) strip.hidden = true; };
+  const showHelp = () => { if (modal) modal.hidden = false; };
+  const hideHelp = () => { if (modal) modal.hidden = true; };
+
+  // 1) If already installed, hide UI
+  if (isStandalone) hideStrip();
+
+  // 2) Listen for native install prompt (Android/desktop)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (!isStandalone) {
+      showStrip();
+      if (btnInstall) btnInstall.hidden = false;
+    }
+  });
+
+  // 3) iOS: no prompt—show help link (and show strip)
+  if (!isStandalone && isIOS) {
+    showStrip();
+    if (btnInstall) btnInstall.hidden = true; // iOS cannot programmatically prompt
+  }
+
+  // 4) Button handlers
+  if (btnInstall) {
+    btnInstall.addEventListener('click', async () => {
+      if (!deferredPrompt) { showHelp(); return; }
+      deferredPrompt.prompt();
+      try {
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') hideStrip();
+      } catch (_) {}
+      deferredPrompt = null;
+    });
+  }
+  if (btnHelp) btnHelp.addEventListener('click', showHelp);
+  if (close) close.addEventListener('click', hideHelp);
+  if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) hideHelp(); });
+
+  // 5) When installed, clean up
+  window.addEventListener('appinstalled', () => { hideStrip(); hideHelp(); });
+})();
+</script>
+
 
 <style>
   /* ===== Layout & Theme ===== */
