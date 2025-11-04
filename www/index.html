@@ -1,6 +1,16 @@
 <!-- KJV Fancy Reader (v2.0‑alpha) — Living Word Bibles -->
 <!-- Single‑file widget. Paste into a Squarespace Code block or any HTML page. -->
 
+<link rel="manifest" href="/kjv-ios/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/kjv-ios/icons/icon-192.png">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/kjv-ios/sw.js'));
+  }
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
