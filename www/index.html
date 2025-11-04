@@ -1,20 +1,29 @@
-<!-- KJV Fancy Reader (v2.0‑alpha) — Living Word Bibles -->
-<!-- Single‑file widget. Paste into a Squarespace Code block or any HTML page. -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>The Holy Bible: King James Version</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<link rel="manifest" href="/kjv-ios/manifest.webmanifest">
-<link rel="apple-touch-icon" href="/kjv-ios/icons/icon-192.png">
-<meta name="theme-color" content="#111111">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/kjv-ios/sw.js'));
-  }
-</script>
+  <!-- PWA hooks (works on GitHub Pages at /kjv-ios/) -->
+  <link rel="manifest" href="/kjv-ios/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/kjv-ios/icons/icon-192.png">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/kjv-ios/sw.js'));
+    }
+  </script>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
 
+<!-- KJV Fancy Reader (v2.0-alpha, local/offline) — Living Word Bibles -->
 <div id="lwb-kjv-app" class="lwb-kjv"></div>
 
 <style>
@@ -80,16 +89,20 @@
   const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
 
   // ========================= CONFIG =========================
-  const LOGO_URL = 'https://static1.squarespace.com/static/68d6b7d6d21f02432fd7397b/t/690209b3567af44aabfbdaca/1761741235124/LivingWordBibles01.png';
+  // Detect the repo subpath so it works on GitHub Pages (/kjv-ios) AND on a root domain (/)
+  const PROJECT = 'kjv-ios';
+  const BASE_PATH = location.pathname.startsWith(`/${PROJECT}/`) ? `/${PROJECT}` : '';
+
+  // Local, offline logo (place file at /www/assets/LivingWordBibles01.png)
+  const LOGO_URL = `${BASE_PATH}/assets/LivingWordBibles01.png`;
+
+  // Local-first JSON, with remote fallbacks
   const BASES = [
-    'https://cdn.jsdelivr.net/gh/Living-Word-Bibles/the-holy-bible@main/Bible-kjv-master/',
-    'https://raw.githubusercontent.com/Living-Word-Bibles/the-holy-bible/main/Bible-kjv-master/',
-    'https://cdn.jsdelivr.net/gh/aruljohn/Bible-kjv@master/',
-    'https://raw.githubusercontent.com/aruljohn/Bible-kjv/master/',
-    'https://cdn.jsdelivr.net/gh/aruljohn/Bible-kjv-1611@master/',
-    'https://raw.githubusercontent.com/aruljohn/Bible-kjv-1611/master/'
+    `${BASE_PATH}/Bible-kjv-master/`,                                // local/offline
+    'https://cdn.jsdelivr.net/gh/aruljohn/Bible-kjv@master/',        // fallback #1
+    'https://raw.githubusercontent.com/aruljohn/Bible-kjv/master/'   // fallback #2
   ];
-  const cacheBust = '';
+  const cacheBust = ''; // e.g., '?v=2025-11-03' if you need hard refresh
   let ACTIVE_BASE = null;
 
   const OT = ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi'];
@@ -98,7 +111,7 @@
   // ====================== HELPERS ==========================
   const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
   const slugify = name => String(name).trim().toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,'-');
-  const fileFromName = name => String(name).replace(/[^0-9A-Za-z]/g,'') + '.json'; // e.g., Song of Solomon -> SongofSolomon.json
+  const fileFromName = name => String(name).replace(/[^0-9A-Za-z]/g,'') + '.json';
   const refToHash = r => `#/${r.bookSlug}/${r.chapter}/${r.verse}`;
   const absoluteVerseUrl = ref => location.origin + location.pathname + refToHash(ref);
   function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -240,7 +253,7 @@
 
   function shareUrls(ref, bookName, verseText){
     const url = encodeURIComponent(absoluteVerseUrl(ref));
-    const refLabel = `${bookName} ${ref.chapter}:${ref.verse}`; // no (KJV)
+    const refLabel = `${bookName} ${ref.chapter}:${ref.verse}`;
     const text = encodeURIComponent(`The Holy Bible — ${refLabel}: ${verseText}`.replace(/\s+/g,' ').slice(0,250));
     const title = encodeURIComponent(`The Holy Bible — ${refLabel}`);
     return {
@@ -289,7 +302,7 @@
 
           <button id="kjv-prev" class="kjv__btn" type="button" title="Previous">◀</button>
           <button id="kjv-next" class="kjv__btn" type="button" title="Next">▶</button>
-          
+
           <!-- Dice immediately after arrows -->
           <button id="kjv-dice" class="kjv__btn kjv__dice" type="button" title="Random verse" aria-label="Random verse">
             <span class="pip pip-1"></span><span class="pip pip-2"></span><span class="pip pip-3"></span>
@@ -473,3 +486,6 @@
   })();
 })();
 </script>
+
+</body>
+</html>
