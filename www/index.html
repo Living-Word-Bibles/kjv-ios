@@ -9,11 +9,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KJV (LWB)">
 
-  <!-- PWA manifest + icons (logo shows when installed) -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
@@ -22,7 +20,6 @@
     :root { --brand:#111; --card:#fff; --muted:#666; --border:#ddd; --shadow:0 2px 16px rgba(0,0,0,.08); }
     body { margin:0; background:#f5f6f7; color:#111; font-family:"EB Garamond", Garamond, "Times New Roman", serif; }
 
-    /* App shell */
     .lwb-kjv{max-width:880px;margin:1rem auto;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--card);overflow:hidden}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
@@ -44,7 +41,6 @@
     .kjv__text{font-size:1.18rem;line-height:1.75}
     .kjv__text .vnum{font-variant-numeric:tabular-nums;color:#666;margin-right:.25rem}
 
-    /* Inline TOC */
     .kjv__toc{max-height:260px;overflow:auto;border-top:1px solid #eee;border-bottom:1px solid #eee;padding:.6rem 1rem;display:none}
     .kjv__toc[aria-hidden="false"]{display:block}
     .kjv__toc-title{font-weight:700;margin:.1rem 0 .6rem}
@@ -52,43 +48,33 @@
     .kjv__toc a{display:inline-block;padding:.28rem .6rem;border:1px solid #ddd;border-radius:999px;text-decoration:none;color:#111;font-size:.95rem}
     .kjv__toc a:hover{background:#f7f7f7}
 
-    /* Bottom pager (appears only in Chapter view) */
+    /* Bottom pager (chapter-only) */
     .kjv__pager{
       display:none; justify-content:space-between; align-items:center;
       padding:.6rem 1rem; border-top:1px solid #eee; background:#fafafa;
     }
     .kjv__pager[aria-hidden="false"]{ display:flex; }
 
-    /* Share bar */
     .kjv__share{display:flex;gap:.5rem;align-items:center;padding:.75rem 1rem;border-top:1px solid #eee;background:#fafafa;flex-wrap:wrap;justify-content:center}
     .shbtn{display:flex;align-items:center;gap:.4rem;padding:.38rem .7rem;border:1px solid #bbb;border-radius:999px;background:#fff;cursor:pointer;text-decoration:none;color:inherit}
     .shbtn:hover{background:#f3f3f3}
     .shbtn svg{width:18px;height:18px;fill:currentColor}
 
-    /* Footer */
     .kjv__foot{display:flex;justify-content:space-between;gap:.75rem;align-items:center;padding:.65rem 1rem;font-size:.94rem;color:#666;border-top:1px solid #eee;background:#fafafa}
     .kjv__foot a{font-weight:600}
     .kjv__foot-right{white-space:nowrap}
 
-    /* Dice */
     .kjv__dice{position:relative;width:36px;height:36px;border-radius:6px;padding:0;display:inline-grid;place-items:center;border:2px solid #000;background:#fff}
     .kjv__dice .pip{position:absolute;width:6px;height:6px;border-radius:50%;background:#000}
     .pip-1{top:6px;left:6px}.pip-2{top:6px;right:6px}.pip-3{bottom:6px;left:6px}
     .pip-4{bottom:6px;right:6px}.pip-5{top:50%;left:50%;transform:translate(-50%,-50%)}
     .pip-6{top:50%;right:6px;transform:translateY(-50%)}
 
-    /* ===== Floating Install pill (only on Genesis 1) ===== */
     #pwa-fab{position:fixed;right:16px;bottom:16px;z-index:10000;display:none}
-    .pwa-fab__btn{
-      display:inline-flex;align-items:center;gap:.5rem;
-      padding:.5rem .8rem;border-radius:999px;border:1px solid #111;background:#111;color:#fff;
-      font:600 14px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; cursor:pointer;
-      box-shadow:0 4px 14px rgba(0,0,0,.18);
-    }
+    .pwa-fab__btn{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem .8rem;border-radius:999px;border:1px solid #111;background:#111;color:#fff;font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.18)}
     .pwa-fab__btn:hover{opacity:.92}
     .pwa-fab__icon{width:18px;height:18px;display:inline-block;border-radius:4px;background:#fff}
 
-    /* ===== Fullscreen Install / Help modal ===== */
     .pwa-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:10001}
     .pwa-modal[aria-hidden="false"]{display:grid}
     .pwa-modal__box{background:#fff;max-width:760px;width:min(92vw,760px);padding:1rem 1.1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);position:relative}
@@ -99,16 +85,13 @@
     .pwa-modal__cols ol{margin:.25rem 0 .25rem 1.1rem}
     @media(min-width:760px){ .pwa-modal__cols{grid-template-columns:1fr 1fr 1fr} }
 
-    /* Error toast (reader) */
     .kjv__error{padding:1rem;border:1px solid #f0c;border-radius:12px;background:#fff3f6;color:#a00}
   </style>
 </head>
 <body>
 
-  <!-- App container -->
   <div id="lwb-kjv-app" class="lwb-kjv"></div>
 
-  <!-- Floating install pill (only shows on Genesis 1 and when not installed) -->
   <div id="pwa-fab">
     <button id="pwa-fab-btn" class="pwa-fab__btn" type="button" aria-haspopup="dialog" aria-controls="pwa-modal">
       <span class="pwa-fab__icon" aria-hidden="true"></span>
@@ -116,7 +99,6 @@
     </button>
   </div>
 
-  <!-- Fullscreen Install / Help modal -->
   <div id="pwa-modal" class="pwa-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pwa-modal-title">
     <div class="pwa-modal__box">
       <button id="pwa-modal-close" class="pwa-modal__close" aria-label="Close">✕</button>
@@ -153,7 +135,6 @@
     </div>
   </div>
 
-  <!-- Service worker registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -162,11 +143,9 @@
     }
   </script>
 
-  <!-- PWA install logic (FAB visibility only on Genesis 1 + modal behavior) -->
   <script>
     (function(){
       let deferredPrompt = null;
-
       const $ = (s, r=document)=>r.querySelector(s);
       const fabWrap = $('#pwa-fab');
       const fabBtn  = $('#pwa-fab-btn');
@@ -175,7 +154,6 @@
       const installNowBtn = $('#pwa-install-now');
 
       const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
       function parseHash(){
         const h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
@@ -185,56 +163,32 @@
         }
         return { book: 'genesis', chapter: 1 };
       }
-
       function shouldShowFab(){
-        if (isStandalone()) return false;               // hide in installed app
+        if (isStandalone()) return false;
         const { book, chapter } = parseHash();
-        return (book === 'genesis' && chapter === 1);   // only on Genesis 1
+        return (book === 'genesis' && chapter === 1);
       }
+      function updateFab(){ if (fabWrap) fabWrap.style.display = shouldShowFab() ? 'block' : 'none'; }
+      function openModal(){ if (modal){ modal.setAttribute('aria-hidden','false'); if (installNowBtn){ installNowBtn.disabled = isStandalone(); installNowBtn.textContent = isStandalone() ? 'Already installed' : 'Install now'; } } }
+      function closeModal(){ if (modal) modal.setAttribute('aria-hidden','true'); }
 
-      function updateFab(){
-        if (!fabWrap) return;
-        fabWrap.style.display = shouldShowFab() ? 'block' : 'none';
-      }
-
-      function openModal(){
-        if (!modal) return;
-        modal.setAttribute('aria-hidden', 'false');
-        if (isStandalone()) {
-          if (installNowBtn) { installNowBtn.disabled = true; installNowBtn.textContent = 'Already installed'; }
-        } else {
-          if (installNowBtn) { installNowBtn.disabled = false; installNowBtn.textContent = 'Install now'; }
-        }
-      }
-
-      function closeModal(){ if (modal) modal.setAttribute('aria-hidden', 'true'); }
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        updateFab();
-      });
-
+      window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; updateFab(); });
       fabBtn && fabBtn.addEventListener('click', openModal);
       closeBtn && closeBtn.addEventListener('click', closeModal);
       modal && modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
       window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
-
-      installNowBtn && installNowBtn.addEventListener('click', async ()=>{
-        if (!deferredPrompt) { if (isIOS) alert('On iPhone: Share → “Add to Home Screen”.'); return; }
-        deferredPrompt.prompt();
-        try { await deferredPrompt.userChoice; } catch(_){}
-        deferredPrompt = null;
-        closeModal();
+      document.getElementById('pwa-install-now')?.addEventListener('click', async ()=>{
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt(); try { await deferredPrompt.userChoice; } catch(_){}
+        deferredPrompt = null; closeModal();
       });
-
       window.addEventListener('appinstalled', () => { closeModal(); updateFab(); });
       window.addEventListener('hashchange', updateFab);
       updateFab();
     })();
   </script>
 
-  <!-- ===== KJV Fancy Reader (JSON source via GitHub) ===== -->
+  <!-- ===== KJV Fancy Reader ===== -->
   <script>
   (function(){
     const root = document.getElementById('lwb-kjv-app');
@@ -242,7 +196,6 @@
     const $ = (sel, r=root) => r.querySelector(sel);
     const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
 
-    // ========================= CONFIG =========================
     const LOGO_URL = '/assets/LivingWordBibles01.png';
     const BASES = [
       'https://cdn.jsdelivr.net/gh/Living-Word-Bibles/the-holy-bible@main/Bible-kjv-master/',
@@ -258,13 +211,12 @@
     const OT = ['Genesis','Exodus','Leviticus','Numbers','Deuteronomy','Joshua','Judges','Ruth','1 Samuel','2 Samuel','1 Kings','2 Kings','1 Chronicles','2 Chronicles','Ezra','Nehemiah','Esther','Job','Psalms','Proverbs','Ecclesiastes','Song of Solomon','Isaiah','Jeremiah','Lamentations','Ezekiel','Daniel','Hosea','Joel','Amos','Obadiah','Jonah','Micah','Nahum','Habakkuk','Zephaniah','Haggai','Zechariah','Malachi'];
     const NT = ['Matthew','Mark','Luke','John','Acts','Romans','1 Corinthians','2 Corinthians','Galatians','Ephesians','Philippians','Colossians','1 Thessalonians','2 Thessalonians','1 Timothy','2 Timothy','Titus','Philemon','Hebrews','James','1 Peter','2 Peter','1 John','2 John','3 John','Jude','Revelation'];
 
-    // ====================== HELPERS ==========================
-    const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
+    const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     const slugify = name => String(name).trim().toLowerCase().replace(/[^a-z0-9\s]/g,'').replace(/\s+/g,'-');
     const fileFromName = name => String(name).replace(/[^0-9A-Za-z]/g,'') + '.json';
     const refToHash = r => `#/${r.bookSlug}/${r.chapter}/${r.verse}`;
     const absoluteVerseUrl = ref => location.origin + location.pathname + refToHash(ref);
-    function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;'); }
+    const escapeHtml = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');
 
     async function fetchJSON(u){
       const r = await fetch(u, {cache:'no-store'});
@@ -273,7 +225,6 @@
       if(ct.includes('application/json')) return r.json();
       return JSON.parse(await r.text());
     }
-
     async function pickActiveBase(){
       if(ACTIVE_BASE) return ACTIVE_BASE;
       let lastErr = '';
@@ -288,7 +239,6 @@
       throw new Error('Could not load Books.json. ' + (lastErr||''));
     }
 
-    // ====================== DATA LAYER =======================
     const Index = { list: null };
     const Books = new Map();
 
@@ -316,7 +266,6 @@
         }
         out.chapters[Number(chNum)] = { verseCount:Object.keys(vmap).length, verses:vmap };
       }
-
       if (data && Array.isArray(data.chapters)){
         for(const ch of data.chapters){
           const chNum = Number(ch.chapter);
@@ -347,7 +296,6 @@
       return norm;
     }
 
-    // ====================== NAV & SHARE ======================
     function nextBookSlug(slug){ const list = Index.list; const i = list.findIndex(b=>b.slug===slug); return (i>=0 && i<list.length-1) ? list[i+1].slug : slug; }
     function prevBookSlug(slug){ const list = Index.list; const i = list.findIndex(b=>b.slug===slug); return (i>0) ? list[i-1].slug : slug; }
 
@@ -363,7 +311,6 @@
       const nbFirstChapter = Math.min(...Object.keys(nb.chapters).map(Number));
       return { bookSlug: nbSlug, chapter: nbFirstChapter, verse: 1 };
     }
-
     async function stepPrevVerse(ref){
       if(ref.verse > 1) return { ...ref, verse: ref.verse-1 };
       const book = await loadBook(ref.bookSlug);
@@ -377,7 +324,6 @@
       const lastVc = pb.chapters[lastCh].verseCount || 1;
       return { bookSlug: pbSlug, chapter: lastCh, verse: lastVc };
     }
-
     async function stepNextChapter(ref){
       const book = await loadBook(ref.bookSlug);
       const chNums = Object.keys(book.chapters).map(Number).sort((a,b)=>a-b);
@@ -388,7 +334,6 @@
       const nbFirstChapter = Math.min(...Object.keys(nb.chapters).map(Number));
       return { bookSlug: nbSlug, chapter: nbFirstChapter, verse: 1 };
     }
-
     async function stepPrevChapter(ref){
       const book = await loadBook(ref.bookSlug);
       const chNums = Object.keys(book.chapters).map(Number).sort((a,b)=>a-b);
@@ -413,7 +358,6 @@
         email:    `mailto:?subject=${title}&body=${text}%0A%0A${url}`
       };
     }
-
     function shareIcon(label){
       const map = {
         facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 22v-9h3l1-4h-4V7a2 2 0 0 1 2-2h2V1h-3a5 5 0 0 0-5 5v3H7v4h3v9h3z"/></svg>',
@@ -426,15 +370,7 @@
       return map[label] || '';
     }
 
-    async function copyLink(ref){
-      const url = absoluteVerseUrl(ref);
-      try{ await navigator.clipboard.writeText(url); }catch(_){
-        const ta = document.createElement('textarea'); ta.value = url; ta.style.position='fixed'; ta.style.left='-9999px';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      }
-    }
-
-    /* ======= TEMPLATE (Dice moved after Chapter dropdown; bottom pager added) ======= */
+    // ---- Template (Dice moved after Chapter dropdown; bottom pager above Share) ----
     function appTemplate(){
       return `
         <div class="kjv__head">
@@ -448,19 +384,16 @@
             <input id="kjv-passage" class="kjv__input" type="text" placeholder="e.g., John 3:16" aria-label="Jump"/>
             <button id="kjv-go" class="kjv__btn" type="button" title="Go">Go</button>
 
-            <!-- Chapter (verse) dropdown -->
             <select id="kjv-verse" class="kjv__select-verse" aria-label="Select verse"></select>
 
-            <!-- DICE moved immediately after the Chapter dropdown -->
+            <!-- Dice immediately after Chapter/Verse dropdown -->
             <button id="kjv-dice" class="kjv__btn kjv__dice" type="button" title="Random verse" aria-label="Random verse">
               <span class="pip pip-1"></span><span class="pip pip-2"></span><span class="pip pip-3"></span>
               <span class="pip pip-4"></span><span class="pip pip-5"></span><span class="pip pip-6"></span>
             </button>
 
-            <!-- Book dropdown -->
             <select id="kjv-select" class="kjv__select" aria-label="Select book"></select>
 
-            <!-- Prev/Next keep the same line with dropdowns -->
             <button id="kjv-prev" class="kjv__btn" type="button" title="Previous">◀</button>
             <button id="kjv-next" class="kjv__btn" type="button" title="Next">▶</button>
 
@@ -483,10 +416,10 @@
           <div class="kjv__text" id="kjv-text"></div>
         </div>
 
-        <!-- Bottom pager (only when in Chapter view) -->
+        <!-- Bottom pager (CHAPTER navigation only; visible in Chapter view) -->
         <div id="kjv-bottom-pager" class="kjv__pager" aria-hidden="true">
-          <button id="kjv-bottom-prev" class="kjv__btn" type="button" title="Previous verse in chapter">◀ Prev</button>
-          <button id="kjv-bottom-next" class="kjv__btn" type="button" title="Next verse in chapter">Next ▶</button>
+          <button id="kjv-bottom-prev" class="kjv__btn" type="button" title="Previous chapter">◀ Prev Chapter</button>
+          <button id="kjv-bottom-next" class="kjv__btn" type="button" title="Next chapter">Next Chapter ▶</button>
         </div>
 
         <div class="kjv__share" role="region" aria-label="Share">
@@ -586,7 +519,6 @@
     function setFont(val){ val=Math.max(0.9,Math.min(1.6,val)); state.font=val; localStorage.setItem('kjv_font', String(val)); const t=$('#kjv-text'); if(t) t.style.fontSize = val + 'rem'; }
     function updateViewButton(){ $('#kjv-view').textContent = (state.view==='verse') ? 'Verse ▾' : 'Chapter ▴'; }
 
-    // Scroll to the top of the reader text container.
     function scrollToReaderTop(){
       const body = root.querySelector('.kjv__body');
       if(!body) return;
@@ -595,17 +527,20 @@
     }
 
     async function render(){
-      const elRoot = root;
       const idx = await loadIndex();
       if(!state.passage) state.passage = hashToRef();
       const current = idx.find(b=>b.slug===state.passage.bookSlug) || idx[0];
       const book = await loadBook(current.slug);
-      if(!book.chapters[state.passage.chapter]){ const firstCh = Math.min(...Object.keys(book.chapters).map(Number)); state.passage.chapter = firstCh; state.passage.verse = 1; }
-      elRoot.innerHTML = appTemplate();
+      if(!book.chapters[state.passage.chapter]){
+        const firstCh = Math.min(...Object.keys(book.chapters).map(Number));
+        state.passage.chapter = firstCh; state.passage.verse = 1;
+      }
 
-      // Build book/verse dropdowns
+      root.innerHTML = appTemplate();
+
       populateBookSelect(idx);
       const bookSel = $('#kjv-select'); if(bookSel){ bookSel.value = current.slug; bookSel.onchange = (e)=>{ state.passage = { bookSlug:e.target.value, chapter:1, verse:1 }; render(); }; }
+
       populateVerseSelect(book, state.passage.chapter);
 
       const ch = book.chapters[state.passage.chapter];
@@ -613,11 +548,11 @@
         ? Object.entries(ch.verses).map(([i,t])=>`<span class="vnum">${i}</span> ${escapeHtml(t)}`).join(' ')
         : escapeHtml(ch.verses[String(clamp(state.passage.verse,1,ch.verseCount||1))]||'(Verse not found.)');
 
-      $('.kjv__ref', elRoot).textContent = `${book.name} ${state.passage.chapter}:${state.passage.verse}`;
-      $('#kjv-text', elRoot).innerHTML = (state.view==='chapter') ? verseText : `<span class="verse">${verseText}</span>`;
+      $('.kjv__ref').textContent = `${book.name} ${state.passage.chapter}:${state.passage.verse}`;
+      $('#kjv-text').innerHTML = (state.view==='chapter') ? verseText : `<span class="verse">${verseText}</span>`;
 
-      // Apply controls
       updateViewButton(); setFont(state.font);
+
       $('#kjv-go').addEventListener('click', ()=>{ const r = parseInput($('#kjv-passage').value, idx); if(r){ state.passage=r; render(); }});
       $('#kjv-passage').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const r=parseInput(e.target.value, idx); if(r){ state.passage=r; render(); }}});
 
@@ -645,30 +580,26 @@
       $('#kjv-view').addEventListener('click', ()=>{ state.view = (state.view==='verse')?'chapter':'verse'; localStorage.setItem('kjv_view', state.view); updateViewButton(); render(); });
       $('#kjv-a-plus').addEventListener('click', ()=>{ setFont(state.font + 0.06); });
       $('#kjv-a-minus').addEventListener('click', ()=>{ setFont(state.font - 0.06); });
-
       $('#kjv-books').addEventListener('click', toggleTOC);
 
-      updateShareLinks(state.passage, book.name, $('.verse', elRoot)?.textContent || '');
+      updateShareLinks(state.passage, book.name, document.querySelector('.verse')?.textContent || '');
 
-      // NEW: bottom pager — only in Chapter view, navigates verse-by-verse and resets to top
+      // Bottom pager: CHAPTER-ONLY jumps
       const pager = $('#kjv-bottom-pager');
       pager.setAttribute('aria-hidden', state.view === 'chapter' ? 'false' : 'true');
-      const doBottomPrev = async ()=>{
-        state.passage = await stepPrevVerse(state.passage);
+      $('#kjv-bottom-prev')?.addEventListener('click', async ()=>{
+        state.passage = await stepPrevChapter(state.passage);
         await render(); scrollToReaderTop();
-      };
-      const doBottomNext = async ()=>{
-        state.passage = await stepNextVerse(state.passage);
+      });
+      $('#kjv-bottom-next')?.addEventListener('click', async ()=>{
+        state.passage = await stepNextChapter(state.passage);
         await render(); scrollToReaderTop();
-      };
-      $('#kjv-bottom-prev')?.addEventListener('click', doBottomPrev);
-      $('#kjv-bottom-next')?.addEventListener('click', doBottomNext);
+      });
 
-      // Manage hash
       const newHash = refToHash(state.passage);
       if(location.hash !== newHash) history.replaceState(null, '', newHash);
 
-      // Key binds
+      // Keyboard: left/right mirrors top buttons
       window.onkeydown = async (e)=>{ if(e.key==='ArrowLeft') doPrev(); if(e.key==='ArrowRight') doNext(); };
     }
 
@@ -676,7 +607,7 @@
       document.title = 'The Holy Bible: King James Version';
       root.innerHTML = '<div style="padding:1rem;color:#666">Loading KJV…</div>';
       try{ await loadIndex(); await render(); }
-      catch(e){ root.innerHTML = `<div class="kjv__error"><strong>Startup error:</strong> ${String(e && e.message || e)}</div>`; console.error(e); }
+      catch(e){ root.innerHTML = `<div class="kjv__error"><strong>Startup error:</strong> ${escapeHtml(e.message)}</div>`; console.error(e); }
     })();
   })();
   </script>
