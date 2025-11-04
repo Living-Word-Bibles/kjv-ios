@@ -1,13 +1,26 @@
 {
-  "name": "The Holy Bible — KJV",
-  "short_name": "LWB KJV",
-  "start_url": "/kjv-ios/",
-  "scope": "/kjv-ios/",
+  "id": "/",
+  "name": "The Holy Bible: King James Version",
+  "short_name": "KJV (LWB)",
+  "description": "King James Version Bible reader by Living Word Bibles with offline support.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "background_color": "#111111",
   "theme_color": "#111111",
+  "categories": ["books", "reference", "education"],
   "icons": [
-    { "src": "/kjv-ios/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/kjv-ios/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Genesis 1",
+      "short_name": "Genesis 1",
+      "url": "/#/%67enesis/1/1"
+    }
   ]
 }
