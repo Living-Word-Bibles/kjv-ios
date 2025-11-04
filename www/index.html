@@ -52,7 +52,7 @@
     .kjv__toc a{display:inline-block;padding:.28rem .6rem;border:1px solid #ddd;border-radius:999px;text-decoration:none;color:#111;font-size:.95rem}
     .kjv__toc a:hover{background:#f7f7f7}
 
-    /* Bottom pager (chapter-only) — ADDED */
+    /* Bottom pager (chapter-only) */
     .kjv__pager{
       display:none; justify-content:space-between; align-items:center;
       padding:.6rem 1rem; border-top:1px solid #eee; background:#fafafa;
@@ -187,9 +187,9 @@
       }
 
       function shouldShowFab(){
-        if (isStandalone()) return false;               // hide in installed app
+        if (isStandalone()) return false;
         const { book, chapter } = parseHash();
-        return (book === 'genesis' && chapter === 1);   // only on Genesis 1
+        return (book === 'genesis' && chapter === 1);
       }
 
       function updateFab(){
@@ -200,7 +200,6 @@
       function openModal(){
         if (!modal) return;
         modal.setAttribute('aria-hidden', 'false');
-        // If already installed, disable the in-modal "Install now" button and show message.
         if (isStandalone()) {
           if (installNowBtn) {
             installNowBtn.disabled = true;
@@ -219,26 +218,20 @@
         modal.setAttribute('aria-hidden', 'true');
       }
 
-      // Native prompt capture (Android/desktop)
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        // We do not show the FAB here; FAB shows only when on Genesis 1.
         updateFab();
       });
 
-      // Click handlers
       fabBtn && fabBtn.addEventListener('click', openModal);
       closeBtn && closeBtn.addEventListener('click', closeModal);
       modal && modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
       window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
 
-      // Install-now logic (Android/desktop). On iOS there is no prompt; modal shows instructions.
       installNowBtn && installNowBtn.addEventListener('click', async ()=>{
         if (!deferredPrompt) {
-          if (isIOS) {
-            alert('On iPhone: Share → “Add to Home Screen”.');
-          }
+          if (isIOS) alert('On iPhone: Share → “Add to Home Screen”.');
           return;
         }
         deferredPrompt.prompt();
@@ -252,9 +245,7 @@
         updateFab();
       });
 
-      // React to navigation (hash changes from the reader)
       window.addEventListener('hashchange', updateFab);
-      // Initial state
       updateFab();
     })();
   </script>
@@ -451,7 +442,19 @@
       return map[label] || '';
     }
 
-    // ---- Template (Dice moved after Verse dropdown; bottom pager above Share) ----
+    // Copy link helper (restored)
+    async function copyLink(ref){
+      const url = absoluteVerseUrl(ref);
+      try{
+        await navigator.clipboard.writeText(url);
+      }catch(_){
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position='fixed'; ta.style.left='-9999px';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      }
+    }
+
+    // ---- Template (Dice moved after Verse dropdown; bottom pager above Share)
     function appTemplate(){
       return `
         <div class="kjv__head">
@@ -467,7 +470,7 @@
 
             <select id="kjv-verse" class="kjv__select-verse" aria-label="Select verse"></select>
 
-            <!-- Dice immediately after dropdown (KEPT ON SAME ROW) -->
+            <!-- Dice immediately after dropdown -->
             <button id="kjv-dice" class="kjv__btn kjv__dice" type="button" title="Random verse" aria-label="Random verse">
               <span class="pip pip-1"></span><span class="pip pip-2"></span><span class="pip pip-3"></span>
               <span class="pip pip-4"></span><span class="pip pip-5"></span><span class="pip pip-6"></span>
@@ -497,7 +500,7 @@
           <div class="kjv__text" id="kjv-text"></div>
         </div>
 
-        <!-- Bottom pager (chapter-only; mirrors top handlers) — ADDED -->
+        <!-- Bottom pager (chapter-only; mirrors top handlers) -->
         <div id="kjv-bottom-pager" class="kjv__pager" aria-hidden="true">
           <button id="kjv-bottom-prev" class="kjv__btn" type="button">◀ Prev Chapter</button>
           <button id="kjv-bottom-next" class="kjv__btn" type="button">Next Chapter ▶</button>
@@ -591,6 +594,7 @@
       $('#share-copy').onclick = ()=>copyLink(ref);
     }
 
+    // ===== State =====
     let state = {
       passage: null,
       view: localStorage.getItem('kjv_view') || 'verse',
@@ -599,6 +603,12 @@
 
     function setFont(val){ val=Math.max(0.9,Math.min(1.6,val)); state.font=val; localStorage.setItem('kjv_font', String(val)); const t=$('#kjv-text'); if(t) t.style.fontSize = val + 'rem'; }
     function updateViewButton(){ $('#kjv-view').textContent = (state.view==='verse') ? 'Verse ▾' : 'Chapter ▴'; }
+
+    // Scroll to the top of the reader container
+    function scrollToReaderTop(){
+      const y = root.getBoundingClientRect().top + window.scrollY; /* window.scrollY is standard alias for pageYOffset */
+      window.scrollTo({ top: y, left: 0, behavior: 'auto' }); /* scrollTo with options */
+    }
 
     async function render(){
       const elRoot = root;
@@ -627,9 +637,17 @@
       $('#kjv-go').addEventListener('click', ()=>{ const r = parseInput($('#kjv-passage').value, idx); if(r){ state.passage=r; render(); }});
       $('#kjv-passage').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const r=parseInput(e.target.value, idx); if(r){ state.passage=r; render(); } }});
 
-      // Top buttons (keep original behavior)
-      const doPrev = async ()=>{ state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage); render(); };
-      const doNext = async ()=>{ state.passage = (state.view==='chapter') ? await stepNextChapter(state.passage) : await stepNextVerse(state.passage); render(); };
+      // Top Prev/Next (auto-scroll after render)
+      const doPrev = async ()=>{
+        state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage);
+        await render();
+        scrollToReaderTop();
+      };
+      const doNext = async ()=>{
+        state.passage = (state.view==='chapter') ? await stepNextChapter(state.passage) : await stepNextVerse(state.passage);
+        await render();
+        scrollToReaderTop();
+      };
       $('#kjv-prev').addEventListener('click', doPrev);
       $('#kjv-next').addEventListener('click', doNext);
 
@@ -645,7 +663,13 @@
       });
 
       // View + font
-      $('#kjv-view').addEventListener('click', ()=>{ state.view = (state.view==='verse')?'chapter':'verse'; localStorage.setItem('kjv_view', state.view); updateViewButton(); render(); });
+      $('#kjv-view').addEventListener('click', ()=>{
+        state.view = (state.view==='verse')?'chapter':'verse';
+        localStorage.setItem('kjv_view', state.view);
+        updateViewButton();
+        render();
+        scrollToReaderTop();
+      });
       $('#kjv-a-plus').addEventListener('click', ()=>{ setFont(state.font + 0.06); });
       $('#kjv-a-minus').addEventListener('click', ()=>{ setFont(state.font - 0.06); });
 
@@ -654,7 +678,7 @@
 
       updateShareLinks(state.passage, book.name, $('.verse', elRoot)?.textContent || '');
 
-      // Bottom pager — shows only in Chapter view; mirrors top handlers via .click()
+      // Bottom pager — shows only in Chapter view; mirrors top handlers (so it scrolls too)
       const pager = document.getElementById('kjv-bottom-pager');
       if (pager) {
         pager.setAttribute('aria-hidden', state.view === 'chapter' ? 'false' : 'true');
