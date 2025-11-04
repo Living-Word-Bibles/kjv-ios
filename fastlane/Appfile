@@ -1,5 +1,0 @@
-app_identifier("com.lwb.bible")        # <-- bundle id
-# apple_id is optional when using API keys
-# apple_id("ios@livingwordbibles.com")
-team_id("YOUR_APPLE_DEV_TEAM_ID")      # e.g., ABCDE12345
-itc_team_id("YOUR_ITC_TEAM_ID")        # same org in App Store Connect
