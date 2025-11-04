@@ -258,6 +258,46 @@
     const $ = (sel, r=root) => r.querySelector(sel);
     const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
 
+    /* --------------------------------------------------------------------
+       iOS PWA scroll-to-top hardening
+       - Disable native history scroll restoration
+       - Scroll the actual scroller element (document.scrollingElement)
+       - Double RAF + blur + scrollIntoView + tiny nudge (iOS quirk)
+       References: MDN History.scrollRestoration, Document.scrollingElement,
+       Element.scrollIntoView; known Safari issue when changing hash & re-render. 
+       -------------------------------------------------------------------- */
+    try { history.scrollRestoration = 'manual'; } catch {}
+
+    function scrollToReaderTop(){
+      const scroller = document.scrollingElement || document.documentElement || document.body;
+      const rootEl = document.getElementById('lwb-kjv-app');
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+          }
+          // Primary jump
+          try { scroller.scrollTo(0, 0); } catch { scroller.scrollTop = 0; }
+
+          // Fallback: force the reader to top of viewport
+          if (rootEl && rootEl.scrollIntoView) {
+            try { rootEl.scrollIntoView({ block: 'start' }); } catch { rootEl.scrollIntoView(); }
+          }
+
+          // Tiny nudge for stubborn iOS PWA cases
+          setTimeout(() => {
+            try { scroller.scrollTo({ top: -1, left: 0, behavior: 'auto' }); } catch {
+              scroller.scrollTop = 0;
+              document.documentElement && (document.documentElement.scrollTop = 0);
+              document.body && (document.body.scrollTop = 0);
+            }
+          }, 10);
+        });
+      });
+    }
+    /* ------------------------------------------------------------------ */
+
     // ========================= CONFIG =========================
     const LOGO_URL = '/assets/LivingWordBibles01.png'; // offline logo (ensure file exists)
     const BASES = [
@@ -442,7 +482,7 @@
       return map[label] || '';
     }
 
-    // Copy link helper (restored)
+    // Copy link helper
     async function copyLink(ref){
       const url = absoluteVerseUrl(ref);
       try{
@@ -454,7 +494,7 @@
       }
     }
 
-    // ---- Template (Dice moved after Verse dropdown; bottom pager above Share)
+    // ---- Template (Dice after verse dropdown; bottom pager above Share)
     function appTemplate(){
       return `
         <div class="kjv__head">
@@ -470,7 +510,7 @@
 
             <select id="kjv-verse" class="kjv__select-verse" aria-label="Select verse"></select>
 
-            <!-- Dice immediately after dropdown -->
+            <!-- Dice immediately after verse dropdown -->
             <button id="kjv-dice" class="kjv__btn kjv__dice" type="button" title="Random verse" aria-label="Random verse">
               <span class="pip pip-1"></span><span class="pip pip-2"></span><span class="pip pip-3"></span>
               <span class="pip pip-4"></span><span class="pip pip-5"></span><span class="pip pip-6"></span>
@@ -500,7 +540,7 @@
           <div class="kjv__text" id="kjv-text"></div>
         </div>
 
-        <!-- Bottom pager (chapter-only; mirrors top handlers) -->
+        <!-- Bottom pager (chapter-only; same handlers as top) -->
         <div id="kjv-bottom-pager" class="kjv__pager" aria-hidden="true">
           <button id="kjv-bottom-prev" class="kjv__btn" type="button">◀ Prev Chapter</button>
           <button id="kjv-bottom-next" class="kjv__btn" type="button">Next Chapter ▶</button>
@@ -604,12 +644,6 @@
     function setFont(val){ val=Math.max(0.9,Math.min(1.6,val)); state.font=val; localStorage.setItem('kjv_font', String(val)); const t=$('#kjv-text'); if(t) t.style.fontSize = val + 'rem'; }
     function updateViewButton(){ $('#kjv-view').textContent = (state.view==='verse') ? 'Verse ▾' : 'Chapter ▴'; }
 
-    // Scroll to the top of the reader container
-    function scrollToReaderTop(){
-      const y = root.getBoundingClientRect().top + window.scrollY; /* window.scrollY is standard alias for pageYOffset */
-      window.scrollTo({ top: y, left: 0, behavior: 'auto' }); /* scrollTo with options */
-    }
-
     async function render(){
       const elRoot = root;
       const idx = await loadIndex();
@@ -637,7 +671,7 @@
       $('#kjv-go').addEventListener('click', ()=>{ const r = parseInput($('#kjv-passage').value, idx); if(r){ state.passage=r; render(); }});
       $('#kjv-passage').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const r=parseInput(e.target.value, idx); if(r){ state.passage=r; render(); } }});
 
-      // Top Prev/Next (auto-scroll after render)
+      // Top Prev/Next (auto-scroll after render using hardened function)
       const doPrev = async ()=>{
         state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage);
         await render();
@@ -678,14 +712,14 @@
 
       updateShareLinks(state.passage, book.name, $('.verse', elRoot)?.textContent || '');
 
-      // Bottom pager — shows only in Chapter view; mirrors top handlers (so it scrolls too)
+      // Bottom pager — shows only in Chapter view; *reuse* top handlers (so it scrolls too)
       const pager = document.getElementById('kjv-bottom-pager');
       if (pager) {
         pager.setAttribute('aria-hidden', state.view === 'chapter' ? 'false' : 'true');
         const bp = document.getElementById('kjv-bottom-prev');
         const bn = document.getElementById('kjv-bottom-next');
-        if (bp) bp.addEventListener('click', () => document.getElementById('kjv-prev').click());
-        if (bn) bn.addEventListener('click', () => document.getElementById('kjv-next').click());
+        if (bp) bp.addEventListener('click', doPrev);
+        if (bn) bn.addEventListener('click', doNext);
       }
 
       // Keep hash in sync
