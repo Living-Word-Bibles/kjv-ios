@@ -5,11 +5,13 @@
   <title>The Holy Bible: King James Version</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
+
+  <!-- iOS PWA meta -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="KJV (LWB)">
 
-  <!-- PWA manifest + icons (logo shows when installed) -->
+  <!-- PWA manifest + icons -->
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
@@ -74,7 +76,7 @@
     .pip-4{bottom:6px;right:6px}.pip-5{top:50%;left:50%;transform:translate(-50%,-50%)}
     .pip-6{top:50%;right:6px;transform:translateY(-50%)}
 
-    /* ===== FULLSCREEN INSTALL GATE (shown when NOT in standalone) ===== */
+    /* ===== FULLSCREEN INSTALL GATE (when not in standalone) ===== */
     .install-gate{position:fixed;inset:0;background:#fff;display:none;place-items:center;z-index:100000}
     .install-gate[aria-hidden="false"]{display:grid}
     .gate-card{max-width:860px;width:min(92vw,860px);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px;background:#fff}
@@ -141,7 +143,7 @@
   <script>
     (function(){
       if (!('serviceWorker' in navigator)) return;
-      const SW_VER = 'v6'; // bump with /sw.js VERSION
+      const SW_VER = 'v7'; // bump with /sw.js VERSION
 
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js?' + SW_VER).then(reg => {
@@ -195,7 +197,7 @@
     })();
   </script>
 
-  <!-- PWA install gate logic (replaces FAB + modal) -->
+  <!-- PWA install gate logic -->
   <script>
     (function(){
       const gate = document.getElementById('lwb-install-gate');
@@ -203,7 +205,6 @@
       const installBtn = document.getElementById('gate-install-now');
       let deferredPrompt = null;
 
-      // Paid flow detection (optional)
       function wasJustPaid(){
         try {
           const url = new URL(window.location.href);
@@ -472,7 +473,6 @@
       return map[label] || '';
     }
 
-    // Copy link helper
     async function copyLink(ref){
       const url = absoluteVerseUrl(ref);
       try { await navigator.clipboard.writeText(url); }
@@ -483,7 +483,6 @@
       }
     }
 
-    // ---- Template
     function appTemplate(){
       return `
         <div class="kjv__head">
@@ -621,7 +620,6 @@
       $('#share-copy').onclick = ()=>copyLink(ref);
     }
 
-    // ===== State =====
     let state = {
       passage: null,
       view: localStorage.getItem('kjv_view') || 'verse',
@@ -661,13 +659,11 @@
       $('#kjv-go').addEventListener('click', ()=>{ const r = parseInput($('#kjv-passage').value, idx); if(r){ state.passage=r; render(); }});
       $('#kjv-passage').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const r=parseInput(e.target.value, idx); if(r){ state.passage=r; render(); } }});
 
-      // Prev/Next
       const doPrev = async ()=>{ state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage); await render(); scrollToReaderTop(); };
       const doNext = async ()=>{ state.passage = (state.view==='chapter') ? await stepNextChapter(state.passage) : await stepNextVerse(state.passage); await render(); scrollToReaderTop(); };
       $('#kjv-prev').addEventListener('click', doPrev);
       $('#kjv-next').addEventListener('click', doNext);
 
-      // Dice
       $('#kjv-dice').addEventListener('click', async ()=>{
         const row = idx[Math.floor(Math.random()*idx.length)];
         const b = await loadBook(row.slug);
@@ -678,7 +674,6 @@
         state.passage = { bookSlug: row.slug, chapter: chn, verse: vs }; render();
       });
 
-      // View + font
       $('#kjv-view').addEventListener('click', ()=>{
         state.view = (state.view==='verse')?'chapter':'verse';
         localStorage.setItem('kjv_view', state.view);
@@ -689,12 +684,10 @@
       $('#kjv-a-plus').addEventListener('click', ()=>{ setFont(state.font + 0.06); });
       $('#kjv-a-minus').addEventListener('click', ()=>{ setFont(state.font - 0.06); });
 
-      // Books
       $('#kjv-books').addEventListener('click', toggleTOC);
 
       updateShareLinks(state.passage, book.name, $('.verse', elRoot)?.textContent || '');
 
-      // Bottom pager
       const pager = document.getElementById('kjv-bottom-pager');
       if (pager) {
         pager.setAttribute('aria-hidden', state.view === 'chapter' ? 'false' : 'true');
@@ -704,10 +697,8 @@
         if (bn) bn.addEventListener('click', doNext);
       }
 
-      // Keep hash in sync
       const newHash = refToHash(state.passage); if(location.hash !== newHash) history.replaceState(null, '', newHash);
 
-      // Keyboard shortcuts
       window.onkeydown = async (e)=>{ if(e.key==='ArrowLeft') doPrev(); if(e.key==='ArrowRight') doNext(); };
     }
 
