@@ -77,7 +77,7 @@
     .pip-4{bottom:6px;right:6px}.pip-5{top:50%;left:50%;transform:translate(-50%,-50%)}
     .pip-6{top:50%;right:6px;transform:translateY(-50%)}
 
-    /* ===== FULLSCREEN INSTALL/PURCHASE GATE (shown when NOT in standalone) ===== */
+    /* ===== FULLSCREEN INSTALL GATE (shown when NOT in standalone) ===== */
     .install-gate{position:fixed;inset:0;background:#fff;display:none;place-items:center;z-index:100000}
     .install-gate[aria-hidden="false"]{display:grid}
     .gate-card{max-width:860px;width:min(92vw,860px);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px;background:#fff}
@@ -85,16 +85,12 @@
     .gate-logo{height:80px;object-fit:contain}
     .gate-title{font-weight:700;font-size:1.4rem}
     .gate-sub{font-size:1rem;color:#6b7280}
-    .gate-msg{font-size:.95rem;color:#444;text-align:center;margin:8px 0}
-    .gate-purchase{display:grid;place-items:center;gap:8px;margin:8px 0 14px}
-    .gate-price{font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .gate-cols{display:grid;gap:12px}
     .gate-cols section h4{margin:.25rem 0 .35rem;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     .gate-cols ol{margin:.25rem 0 .25rem 1.1rem}
     .gate-actions{display:flex;justify-content:center;margin-top:8px}
     .gate-btn{font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial; padding:.55rem .9rem;border-radius:999px;border:1px solid #111;background:#111;color:#fff;cursor:pointer}
     .gate-note{margin:10px 0 0 0;text-align:center;color:#555}
-    .paypal-fallback-btn{border:1px solid #ddd;padding:10px 14px;border-radius:12px;background:#f8f8f8;cursor:pointer}
     @media(min-width:760px){ .gate-cols{grid-template-columns:1fr 1fr 1fr} }
 
     /* Error toast (reader) */
@@ -103,35 +99,14 @@
 </head>
 <body>
 
-  <!-- INSTALL/PURCHASE GATE (only shows when not in standalone) -->
+  <!-- INSTALL GATE (only shows when not in standalone) -->
   <div id="lwb-install-gate" class="install-gate" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="gate-title">
     <div class="gate-card">
       <div class="gate-head">
         <img class="gate-logo" src="/assets/LivingWordBibles01.png" alt="Living Word Bibles" loading="lazy"/>
         <div id="gate-title" class="gate-title">Install the LWB Bible App</div>
-        <div id="gate-sub" class="gate-sub">One‑time purchase unlocks install on this device.</div>
+        <div class="gate-sub">Install the LWB Bible App to continue reading offline and ad‑free.</div>
       </div>
-
-      <!-- Purchase area -->
-      <div id="gate-purchase" class="gate-purchase">
-        <div class="gate-price">Price: $0.99 (one‑time)</div>
-        <div id="paypal-button-container" style="min-width:260px"></div>
-        <div id="gate-msg" class="gate-msg"></div>
-        <!-- Fallback: classic PayPal form (only needs your email) -->
-        <form id="paypal-fallback" action="https://www.paypal.com/cgi-bin/webscr" method="post" style="display:none">
-          <input type="hidden" name="cmd" value="_xclick">
-          <input type="hidden" name="business" value="michaelalexandercook1995@gmail.com">
-          <input type="hidden" name="item_name" value="LWB Bible App — iOS Install Pack">
-          <input type="hidden" name="amount" value="0.99">
-          <input type="hidden" name="currency_code" value="USD">
-          <input type="hidden" name="no_shipping" value="1">
-          <input type="hidden" name="no_note" value="1">
-          <input id="paypal-return" type="hidden" name="return" value="/">
-          <input type="hidden" name="cancel_return" value="/">
-          <button type="submit" class="paypal-fallback-btn">Pay $0.99 with PayPal</button>
-        </form>
-      </div>
-
       <div class="gate-cols">
         <section>
           <h4>iPhone / iPad (Safari)</h4>
@@ -174,67 +149,60 @@
     }
   </script>
 
-  <!-- PWA install + PAYMENT gate logic -->
+  <!-- PWA install gate logic (replaces FAB + modal) -->
   <script>
     (function(){
       const gate = document.getElementById('lwb-install-gate');
       const appRoot = document.getElementById('lwb-kjv-app');
       const installBtn = document.getElementById('gate-install-now');
-      const purchaseBox = document.getElementById('gate-purchase');
-      const gateMsg = document.getElementById('gate-msg');
-      const gateTitle = document.getElementById('gate-title');
-      const gateSub = document.getElementById('gate-sub');
-      const paypalReturn = document.getElementById('paypal-return');
-
-      const PAYPAL_CLIENT_ID = 'AbiIK5ihe51SYpgBPaIVplXu9PcRD4bDu8UXs4l5TXgghtFT6lQcEPjjv3E7cHbU1ffTSGmYy89CH_e9';
-      const PRICE_USD = '0.99';
-      const DESCRIPTION = 'LWB Bible App — iOS Install Pack';
-
       let deferredPrompt = null;
+
+      // ==== Paid flow detection & copy swap (Option 2) ====
+      function wasJustPaid(){
+        try {
+          const url = new URL(window.location.href);
+          const paid = url.searchParams.get('paid') === '1';
+          const ref = document.referrer || '';
+          const fromCheckout = /livingwordbibles\.com\/(ios|buy)/i.test(ref);
+          if (paid) {
+            const newUrl = url.origin + url.pathname + (url.hash || '');
+            history.replaceState(null, '', newUrl);
+          }
+          return paid || fromCheckout;
+        } catch(_) { return false; }
+      }
+
+      function setGateCopy(paid){
+        const titleEl = document.getElementById('gate-title');
+        const subEl = gate ? gate.querySelector('.gate-sub') : null;
+        if (!titleEl || !subEl) return;
+        if (paid) {
+          titleEl.textContent = 'Thank you for your purchase!';
+          subEl.textContent = 'Install the LWB Bible App to continue reading offline and ad‑free.';
+        } else {
+          titleEl.textContent = 'Install the LWB Bible App';
+          subEl.textContent = 'Add it to your Home Screen to read offline and ad‑free.';
+        }
+      }
 
       const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-      // detect paid via localStorage or ?paid=1
-      const url = new URL(window.location.href);
-      let paid = false;
-      try { paid = localStorage.getItem('lwb_paid') === '1'; } catch(_){ paid = false; }
-      if (url.searchParams.get('paid') === '1') {
-        paid = true;
-        try { localStorage.setItem('lwb_paid','1'); } catch(_){}
-        // Clean the URL
-        url.searchParams.delete('paid');
-        history.replaceState(null, '', url.pathname + url.hash);
-      }
-
       function showGate(){ gate.setAttribute('aria-hidden','false'); gate.style.display='grid'; if (appRoot) appRoot.style.display='none'; }
       function hideGate(){ gate.setAttribute('aria-hidden','true'); gate.style.display='none'; if (appRoot) appRoot.style.display=''; }
 
-      function unlockInstallUI(){
-        paid = true;
-        purchaseBox && (purchaseBox.style.display = 'none');
-        gateTitle && (gateTitle.textContent = 'Thank you for your purchase!');
-        gateSub && (gateSub.textContent = 'Follow the steps below to install the LWB Bible App.');
-        if (installBtn) installBtn.disabled = false;
-        try { localStorage.setItem('lwb_paid','1'); } catch(_){}
-      }
-
       function updateGate(){
-        if (isStandalone()) { hideGate(); return; }
-        // Not standalone
-        showGate();
-        if (paid) unlockInstallUI();
+        if (isStandalone()) { hideGate(); }
+        else { showGate(); }
       }
 
-      // Enable/handle PWA install prompt
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        if (paid && installBtn) installBtn.disabled = false;
+        if (installBtn) installBtn.disabled = false;
       });
 
       installBtn && installBtn.addEventListener('click', async () => {
-        if (!paid) return; // safety
         if (deferredPrompt) {
           deferredPrompt.prompt();
           try { await deferredPrompt.userChoice; } catch(_){}
@@ -245,69 +213,17 @@
       });
 
       window.addEventListener('appinstalled', () => {
+        try { localStorage.setItem('lwb_installed', '1'); } catch(_){}
         hideGate();
         // optional: reload to ensure standalone UI
         // location.reload();
       });
 
-      // ---- PayPal loader with fallback ----
-      function setMsg(msg){ if (gateMsg) gateMsg.textContent = msg || ''; }
-      function loadPayPal(){
-        // Update fallback return URL dynamically (same page + ?paid=1 + keep hash)
-        try {
-          const ret = location.origin + location.pathname + '?paid=1' + (location.hash || '');
-          if (paypalReturn) paypalReturn.value = ret;
-        } catch(_){ }
-
-        const s = document.createElement('script');
-        s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(PAYPAL_CLIENT_ID)}&currency=USD&intent=capture&components=buttons`;
-        s.async = true;
-        s.onload = renderPP;
-        s.onerror = () => {
-          setMsg('PayPal could not load. Showing fallback…');
-          const ff = document.getElementById('paypal-fallback');
-          if (ff) ff.style.display = 'inline-block';
-        };
-        document.head.appendChild(s);
-      }
-
-      function renderPP(){
-        if (!window.paypal || !paypal.Buttons) {
-          setMsg('PayPal failed to initialize. Showing fallback…');
-          const ff = document.getElementById('paypal-fallback');
-          if (ff) ff.style.display = 'inline-block';
-          return;
-        }
-        setMsg('');
-        paypal.Buttons({
-          style: { layout:'horizontal', tagline:false, height:45, shape:'pill' },
-          createOrder: (data, actions) => {
-            setMsg('Creating order…');
-            return actions.order.create({
-              purchase_units: [{ amount: { value: PRICE_USD, currency_code: 'USD' }, description: DESCRIPTION }],
-              application_context: { shipping_preference: 'NO_SHIPPING' }
-            });
-          },
-          onApprove: async (data, actions) => {
-            setMsg('Finalizing payment…');
-            try { await actions.order.capture(); } catch(e){}
-            setMsg('Payment complete. Unlocking…');
-            unlockInstallUI();
-          },
-          onCancel: () => setMsg('Payment cancelled.'),
-          onError: () => {
-            setMsg('PayPal error. Showing fallback…');
-            const ff = document.getElementById('paypal-fallback');
-            if (ff) ff.style.display = 'inline-block';
-          }
-        }).render('#paypal-button-container');
-      }
-
       // Initial paint
+      setGateCopy(wasJustPaid());
       updateGate();
-      loadPayPal();
 
-      // If user navigates hashes while in browser, keep gate up
+      // If user navigates to a new hash while in browser, keep gate up
       window.addEventListener('hashchange', updateGate);
     })();
   </script>
@@ -525,7 +441,7 @@
         facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 22v-9h3l1-4h-4V7a2 2 0 0 1 2-2h2V1h-3a5 5 0 0 0-5 5v3H7v4h3v9h3z"/></svg>',
         instagram:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-1.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z"/></svg>',
         x:        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.3 2H22l-9.7 11.1L21.4 22h-7l-5.5-6.7L2.6 22H2l8.6-9.8L2 2h7l5 6.1L18.3 2z"/></svg>',
-        linkedin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5C4.98 4.9 3.9 5.9 2.5 5.9S0 4.9 0 3.5 1.1 1.5 2.5 1.5 5 2.9 5 3.5zM0 8.98h5V24H0zM8.48 8.98H13v2.05h.07c.63-1.2 2.16-2.47 4.45-2.47 4.76 0 5.64 3.14 5.64 7.23V24h-5v-6.56c0 -1.56-.03-3.56-2.17-3.56-2.17 0-2.5 1.7-2.5 3.45V24h-5V8.98z"/></svg>',
+        linkedin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5C4.98 4.9 3.9 5.9 2.5 5.9S0 4.9 0 3.5 1.1 1.5 2.5 1.5 5 2.9 5 3.5zM0 8.98h5V24H0zM8.48 8.98H13v2.05h.07c.63-1.2 2.16-2.47 4.45-2.47 4.76 0 5.64 3.14 5.64 7.23V24h-5v-6.56c0-1.56-.03-3.56-2.17-3.56-2.17 0-2.5 1.7-2.5 3.45V24h-5V8.98z"/></svg>',
         email:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h20v16H2V4zm10 7L3.5 6.5h17L12 11zm0 2l8.5-6.5V20h-17V6.5L12 13z"/></svg>',
         copy:     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>'
       };
@@ -622,8 +538,9 @@
     }
 
     function hashToRef(){
-      const h = location.hash.replace(/^#\/??/, '').split('/').filter(Boolean);
+      const h = location.hash.replace(/^#\/?:?/, '').replace(/^\//, '').split('/').filter(Boolean);
       return (h.length>=3)?{bookSlug:h[0],chapter:+h[1],verse:+h[2]}:{bookSlug:'genesis',chapter:1,verse:1};
+    }:{bookSlug:'genesis',chapter:1,verse:1};
     }
 
     function populateBookSelect(idx){
@@ -708,11 +625,11 @@
 
       const ch = book.chapters[state.passage.chapter];
       const verseText = (state.view==='chapter')
-        ? Object.entries(ch.verses).map(([i,t])=>`<span class=\"vnum\">${i}</span> ${escapeHtml(t)}`).join(' ')
+        ? Object.entries(ch.verses).map(([i,t])=>`<span class="vnum">${i}</span> ${escapeHtml(t)}`).join(' ')
         : escapeHtml(ch.verses[String(clamp(state.passage.verse,1,ch.verseCount||1))]||'(Verse not found.)');
 
       $('.kjv__ref', elRoot).textContent = `${book.name} ${state.passage.chapter}:${state.passage.verse}`;
-      $('#kjv-text', elRoot).innerHTML = (state.view==='chapter') ? verseText : `<span class=\"verse\">${verseText}</span>`;
+      $('#kjv-text', elRoot).innerHTML = (state.view==='chapter') ? verseText : `<span class="verse">${verseText}</span>`;
 
       // Controls
       updateViewButton(); setFont(state.font);
@@ -773,7 +690,7 @@
       document.title = 'The Holy Bible: King James Version';
       root.innerHTML = '<div style="padding:1rem;color:#666">Loading KJV…</div>';
       try{ await loadIndex(); await render(); }
-      catch(e){ root.innerHTML = `<div class=\"kjv__error\"><strong>Startup error:</strong> ${escapeHtml(e.message)}</div>`; console.error(e); }
+      catch(e){ root.innerHTML = `<div class="kjv__error"><strong>Startup error:</strong> ${escapeHtml(e.message)}</div>`; console.error(e); }
     })();
   })();
   </script>
