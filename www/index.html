@@ -23,7 +23,7 @@
     body { margin:0; background:#f5f6f7; color:#111; font-family:"EB Garamond", Garamond, "Times New Roman", serif; }
 
     /* App shell */
-    .lwb-kjv{max-width:880px;margin:1rem auto;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:var(--card);overflow:hidden}
+    .lwb-kjv{max-width:880px;margin:1rem auto;border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);background:#fff;overflow:hidden}
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
     .kjv__head{display:flex;flex-direction:column;gap:.6rem;padding:1rem;border-bottom:1px solid #eee;background:#fafafa}
@@ -53,10 +53,7 @@
     .kjv__toc a:hover{background:#f7f7f7}
 
     /* Bottom pager (chapter-only) */
-    .kjv__pager{
-      display:none; justify-content:space-between; align-items:center;
-      padding:.6rem 1rem; border-top:1px solid #eee; background:#fafafa;
-    }
+    .kjv__pager{ display:none; justify-content:space-between; align-items:center; padding:.6rem 1rem; border-top:1px solid #eee; background:#fafafa; }
     .kjv__pager[aria-hidden="false"]{ display:flex; }
 
     /* Share bar */
@@ -105,7 +102,7 @@
       <div class="gate-head">
         <img class="gate-logo" src="/assets/LivingWordBibles01.png" alt="Living Word Bibles" loading="lazy"/>
         <div id="gate-title" class="gate-title">Install the LWB Bible App</div>
-        <div class="gate-sub">Install the LWB Bible App to continue reading offline and ad‑free.</div>
+        <div class="gate-sub">Install the LWB Bible App to continue reading offline and ad-free.</div>
       </div>
       <div class="gate-cols">
         <section>
@@ -140,13 +137,62 @@
   <!-- App container (hidden when not installed) -->
   <div id="lwb-kjv-app" class="lwb-kjv"></div>
 
-  <!-- Service worker registration -->
+  <!-- Service worker registration (versioned + skip-waiting + safe reload) -->
   <script>
-    if ('serviceWorker' in navigator) {
+    (function(){
+      if (!('serviceWorker' in navigator)) return;
+      const SW_VER = 'v6'; // bump with /sw.js VERSION
+
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(()=>{});
+        navigator.serviceWorker.register('/sw.js?' + SW_VER).then(reg => {
+          // If a new SW is already waiting, activate it
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+
+          // When an update is found, reload once it takes control
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            nw && nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                location.reload();
+              }
+            });
+          });
+        }).catch(()=>{});
+
+        // When controller changes (new SW), refresh controlled clients
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!window.__lwb_sw_refreshed) {
+            window.__lwb_sw_refreshed = true;
+            location.reload();
+          }
+        });
       });
-    }
+    })();
+  </script>
+
+  <!-- Panic helper: if app doesn't paint in 6s, offer one-click cache/SW reset -->
+  <script>
+    (function(){
+      const ROOT_ID = 'lwb-kjv-app';
+      setTimeout(async () => {
+        const root = document.getElementById(ROOT_ID);
+        if (!root || root.dataset.ready === '1') return;
+        root.innerHTML = '<div style="padding:16px;border:1px solid #f0c;border-radius:12px;background:#fff3f6;color:#a00">App didn\'t load. <button id="lwb-fix" style="margin-left:8px">Fix it</button></div>';
+        document.getElementById('lwb-fix').onclick = async () => {
+          try {
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            if (navigator.serviceWorker?.getRegistrations) {
+              const regs = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(regs.map(r => r.unregister()));
+            }
+          } catch(_) {}
+          location.reload();
+        };
+      }, 6000);
+    })();
   </script>
 
   <!-- PWA install gate logic (replaces FAB + modal) -->
@@ -157,7 +203,7 @@
       const installBtn = document.getElementById('gate-install-now');
       let deferredPrompt = null;
 
-      // ==== Paid flow detection & copy swap (Option 2) ====
+      // Paid flow detection (optional)
       function wasJustPaid(){
         try {
           const url = new URL(window.location.href);
@@ -178,10 +224,10 @@
         if (!titleEl || !subEl) return;
         if (paid) {
           titleEl.textContent = 'Thank you for your purchase!';
-          subEl.textContent = 'Install the LWB Bible App to continue reading offline and ad‑free.';
+          subEl.textContent = 'Install the LWB Bible App to continue reading offline and ad-free.';
         } else {
           titleEl.textContent = 'Install the LWB Bible App';
-          subEl.textContent = 'Add it to your Home Screen to read offline and ad‑free.';
+          subEl.textContent = 'Add it to your Home Screen to read offline and ad-free.';
         }
       }
 
@@ -191,15 +237,10 @@
       function showGate(){ gate.setAttribute('aria-hidden','false'); gate.style.display='grid'; if (appRoot) appRoot.style.display='none'; }
       function hideGate(){ gate.setAttribute('aria-hidden','true'); gate.style.display='none'; if (appRoot) appRoot.style.display=''; }
 
-      function updateGate(){
-        if (isStandalone()) { hideGate(); }
-        else { showGate(); }
-      }
+      function updateGate(){ if (isStandalone()) hideGate(); else showGate(); }
 
       window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        if (installBtn) installBtn.disabled = false;
+        e.preventDefault(); deferredPrompt = e; if (installBtn) installBtn.disabled = false;
       });
 
       installBtn && installBtn.addEventListener('click', async () => {
@@ -215,15 +256,10 @@
       window.addEventListener('appinstalled', () => {
         try { localStorage.setItem('lwb_installed', '1'); } catch(_){}
         hideGate();
-        // optional: reload to ensure standalone UI
-        // location.reload();
       });
 
-      // Initial paint
       setGateCopy(wasJustPaid());
       updateGate();
-
-      // If user navigates to a new hash while in browser, keep gate up
       window.addEventListener('hashchange', updateGate);
     })();
   </script>
@@ -236,9 +272,7 @@
     const $ = (sel, r=root) => r.querySelector(sel);
     const el = (tag, cls) => { const e=document.createElement(tag); if(cls) e.className=cls; return e; };
 
-    /* --------------------------------------------------------------------
-       iOS PWA scroll-to-top hardening
-       -------------------------------------------------------------------- */
+    /* iOS PWA scroll-to-top hardening */
     try { history.scrollRestoration = 'manual'; } catch {}
 
     function scrollToReaderTop(){
@@ -246,20 +280,10 @@
       const rootEl = document.getElementById('lwb-kjv-app');
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          if (document.activeElement && typeof document.activeElement.blur === 'function') {
-            document.activeElement.blur();
-          }
+          if (document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
           try { scroller.scrollTo(0, 0); } catch { scroller.scrollTop = 0; }
-          if (rootEl && rootEl.scrollIntoView) {
-            try { rootEl.scrollIntoView({ block: 'start' }); } catch { rootEl.scrollIntoView(); }
-          }
-          setTimeout(() => {
-            try { scroller.scrollTo({ top: -1, left: 0, behavior: 'auto' }); } catch {
-              scroller.scrollTop = 0;
-              document.documentElement && (document.documentElement.scrollTop = 0);
-              document.body && (document.body.scrollTop = 0);
-            }
-          }, 10);
+          if (rootEl && rootEl.scrollIntoView) { try { rootEl.scrollIntoView({ block: 'start' }); } catch { rootEl.scrollIntoView(); } }
+          setTimeout(() => { try { scroller.scrollTo({ top: -1, left: 0, behavior: 'auto' }); } catch { scroller.scrollTop = 0; } }, 10);
         });
       });
     }
@@ -451,9 +475,8 @@
     // Copy link helper
     async function copyLink(ref){
       const url = absoluteVerseUrl(ref);
-      try{
-        await navigator.clipboard.writeText(url);
-      }catch(_){
+      try { await navigator.clipboard.writeText(url); }
+      catch(_) {
         const ta = document.createElement('textarea');
         ta.value = url; ta.style.position='fixed'; ta.style.left='-9999px';
         document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
@@ -538,9 +561,8 @@
     }
 
     function hashToRef(){
-      const h = location.hash.replace(/^#\/?:?/, '').replace(/^\//, '').split('/').filter(Boolean);
+      const h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
       return (h.length>=3)?{bookSlug:h[0],chapter:+h[1],verse:+h[2]}:{bookSlug:'genesis',chapter:1,verse:1};
-    }:{bookSlug:'genesis',chapter:1,verse:1};
     }
 
     function populateBookSelect(idx){
@@ -630,6 +652,9 @@
 
       $('.kjv__ref', elRoot).textContent = `${book.name} ${state.passage.chapter}:${state.passage.verse}`;
       $('#kjv-text', elRoot).innerHTML = (state.view==='chapter') ? verseText : `<span class="verse">${verseText}</span>`;
+
+      // mark ready for panic helper
+      try { elRoot.dataset.ready = '1'; } catch(_){}
 
       // Controls
       updateViewButton(); setFont(state.font);
