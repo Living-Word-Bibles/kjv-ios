@@ -1,14 +1,25 @@
 {
-  "name": "The Holy Bible: King James Version",
+  "id": "https://kjv-ios.livingwordbibles.com/",
+  "name": "The Holy Bible: King James Version — Living Word Bibles",
   "short_name": "KJV (LWB)",
-  "id": "/",
+  "description": "Read the Holy Bible (KJV) beautifully formatted for any device. Offline-ready.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "theme_color": "#111111",
   "background_color": "#ffffff",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
