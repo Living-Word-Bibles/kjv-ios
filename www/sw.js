@@ -1,16 +1,16 @@
-// /sw.js  — LWB KJV PWA (network-first for HTML/JSON; cache-first for assets)
-const VERSION = 'lwb-kjv-v6'; // bump when you deploy
+// /sw.js — LWB KJV PWA (network-first for HTML/JSON; cache-first for assets)
+const VERSION = 'lwb-kjv-v7'; // bump when you deploy
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     self.skipWaiting(); // activate immediately
     try {
       const cache = await caches.open(VERSION);
-      // Core is optional; keep minimal to avoid cache poisoning
       await cache.addAll([
-        '/',            // if your index is at /
+        '/',                    // index at site root on the subdomain
         '/manifest.webmanifest',
-        '/icons/icon-192.png'
+        '/icons/icon-192.png',
+        '/icons/icon-512.png'
       ].filter(Boolean));
     } catch (_) {}
   })());
@@ -35,28 +35,28 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Let PayPal and other third-party POSTs/redirects pass through untouched
-  const thirdParty = /paypal\.com/i.test(url.hostname);
-  if (thirdParty) return;
+  // Let third-party POSTs/redirects pass through untouched
+  if (/paypal\.com/i.test(url.hostname)) return;
 
-  // Network-first for HTML and JSON (prevents blank screen when JSON updates)
   const isHTML = req.destination === 'document' || req.headers.get('accept')?.includes('text/html');
   const isJSON = url.pathname.endsWith('.json');
 
+  // Network-first for HTML and JSON
   if (isHTML || isJSON) {
     event.respondWith((async () => {
       try {
         const fresh = await fetch(req, { cache: 'no-store' });
         const copy  = fresh.clone();
-        (async () => { try { const c = await caches.open(VERSION); await c.put(req, copy); } catch(_){} })();
+        (async () => {
+          try { const c = await caches.open(VERSION); await c.put(req, copy); } catch(_) {}
+        })();
         return fresh;
       } catch (_) {
         const cached = await caches.match(req);
         if (cached) return cached;
-        // Last-resort: show something instead of a blank screen
         if (isHTML) {
           return new Response(
-            '<!doctype html><meta charset="utf-8"><title>Offline</title><body style="font-family:sans-serif;padding:24px">Offline or update in progress. Please retry.</body>',
+            '<!doctype html><meta charset="utf-8"><title>Offline</title><body style="font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;padding:24px">Offline or update in progress. Please retry.</body>',
             { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
           );
         }
@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for static assets (png/css/js/fonts), with network fallback
+  // Cache-first for static assets (png/css/js/fonts)
   event.respondWith((async () => {
     const cached = await caches.match(req);
     if (cached) return cached;
