@@ -77,27 +77,21 @@
     .pip-4{bottom:6px;right:6px}.pip-5{top:50%;left:50%;transform:translate(-50%,-50%)}
     .pip-6{top:50%;right:6px;transform:translateY(-50%)}
 
-    /* ===== Floating Install pill (only on Genesis 1) ===== */
-    #pwa-fab{position:fixed;right:16px;bottom:16px;z-index:10000;display:none}
-    .pwa-fab__btn{
-      display:inline-flex;align-items:center;gap:.5rem;
-      padding:.5rem .8rem;border-radius:999px;border:1px solid #111;background:#111;color:#fff;
-      font:600 14px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; cursor:pointer;
-      box-shadow:0 4px 14px rgba(0,0,0,.18);
-    }
-    .pwa-fab__btn:hover{opacity:.92}
-    .pwa-fab__icon{width:18px;height:18px;display:inline-block;border-radius:4px;background:#fff}
-
-    /* ===== Fullscreen Install / Help modal ===== */
-    .pwa-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;place-items:center;z-index:10001}
-    .pwa-modal[aria-hidden="false"]{display:grid}
-    .pwa-modal__box{background:#fff;max-width:760px;width:min(92vw,760px);padding:1rem 1.1rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2);position:relative}
-    .pwa-modal__title{margin:.1rem 0 .6rem;font-weight:700;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .pwa-modal__close{position:absolute;top:.6rem;right:.6rem;border:1px solid #ddd;background:#f7f7f7;border-radius:10px;padding:.25rem .5rem;cursor:pointer}
-    .pwa-modal__cols{display:grid;gap:1rem}
-    .pwa-modal__cols section h4{margin:.25rem 0 .35rem;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
-    .pwa-modal__cols ol{margin:.25rem 0 .25rem 1.1rem}
-    @media(min-width:760px){ .pwa-modal__cols{grid-template-columns:1fr 1fr 1fr} }
+    /* ===== FULLSCREEN INSTALL GATE (shown when NOT in standalone) ===== */
+    .install-gate{position:fixed;inset:0;background:#fff;display:none;place-items:center;z-index:100000}
+    .install-gate[aria-hidden="false"]{display:grid}
+    .gate-card{max-width:860px;width:min(92vw,860px);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px;background:#fff}
+    .gate-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:.4rem;margin-bottom:10px}
+    .gate-logo{height:80px;object-fit:contain}
+    .gate-title{font-weight:700;font-size:1.4rem}
+    .gate-sub{font-size:1rem;color:#6b7280}
+    .gate-cols{display:grid;gap:12px}
+    .gate-cols section h4{margin:.25rem 0 .35rem;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .gate-cols ol{margin:.25rem 0 .25rem 1.1rem}
+    .gate-actions{display:flex;justify-content:center;margin-top:8px}
+    .gate-btn{font:600 14px system-ui,-apple-system,Segoe UI,Roboto,Arial; padding:.55rem .9rem;border-radius:999px;border:1px solid #111;background:#111;color:#fff;cursor:pointer}
+    .gate-note{margin:10px 0 0 0;text-align:center;color:#555}
+    @media(min-width:760px){ .gate-cols{grid-template-columns:1fr 1fr 1fr} }
 
     /* Error toast (reader) */
     .kjv__error{padding:1rem;border:1px solid #f0c;border-radius:12px;background:#fff3f6;color:#a00}
@@ -105,53 +99,46 @@
 </head>
 <body>
 
-  <!-- App container -->
-  <div id="lwb-kjv-app" class="lwb-kjv"></div>
-
-  <!-- Floating install pill (only shows on Genesis 1 and when not installed) -->
-  <div id="pwa-fab">
-    <button id="pwa-fab-btn" class="pwa-fab__btn" type="button" aria-haspopup="dialog" aria-controls="pwa-modal">
-      <span class="pwa-fab__icon" aria-hidden="true"></span>
-      <span>Install the LWB Bible App</span>
-    </button>
-  </div>
-
-  <!-- Fullscreen Install / Help modal -->
-  <div id="pwa-modal" class="pwa-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="pwa-modal-title">
-    <div class="pwa-modal__box">
-      <button id="pwa-modal-close" class="pwa-modal__close" aria-label="Close">✕</button>
-      <h3 id="pwa-modal-title" class="pwa-modal__title">Install the LWB Bible App</h3>
-      <div id="pwa-modal-body">
-        <div class="pwa-modal__cols">
-          <section>
-            <h4>iPhone / iPad (Safari)</h4>
-            <ol>
-              <li>Open <strong>kjv.livingwordbibles.com</strong> in Safari.</li>
-              <li>Tap the <strong>Share</strong> icon.</li>
-              <li>Choose <strong>Add to Home Screen</strong>.</li>
-              <li>Tap <strong>Add</strong>.</li>
-            </ol>
-          </section>
-          <section>
-            <h4>Android (Chrome)</h4>
-            <ol>
-              <li>Open <strong>kjv.livingwordbibles.com</strong> in Chrome.</li>
-              <li>Tap the <strong>⋮</strong> menu.</li>
-              <li>Tap <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
-            </ol>
-            <p><button id="pwa-install-now" class="kjv__btn" type="button">Install now</button></p>
-          </section>
-          <section>
-            <h4>Desktop (Chrome / Edge)</h4>
-            <ol>
-              <li>Open the site.</li>
-              <li>Click the <strong>Install</strong> icon in the address bar.</li>
-            </ol>
-          </section>
-        </div>
+  <!-- INSTALL GATE (only shows when not in standalone) -->
+  <div id="lwb-install-gate" class="install-gate" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="gate-title">
+    <div class="gate-card">
+      <div class="gate-head">
+        <img class="gate-logo" src="/assets/LivingWordBibles01.png" alt="Living Word Bibles" loading="lazy"/>
+        <div id="gate-title" class="gate-title">Thank you for your purchase!</div>
+        <div class="gate-sub">Install the LWB Bible App to continue reading offline and ad‑free.</div>
       </div>
+      <div class="gate-cols">
+        <section>
+          <h4>iPhone / iPad (Safari)</h4>
+          <ol>
+            <li>Open this page in <strong>Safari</strong>.</li>
+            <li>Tap the <strong>Share</strong> icon.</li>
+            <li>Select <strong>Add to Home Screen</strong>.</li>
+            <li>Tap <strong>Add</strong>, then launch the app from your Home Screen.</li>
+          </ol>
+        </section>
+        <section>
+          <h4>Android (Chrome)</h4>
+          <ol>
+            <li>Tap the <strong>⋮</strong> menu in Chrome.</li>
+            <li>Choose <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
+          </ol>
+          <p class="gate-actions"><button id="gate-install-now" class="gate-btn" type="button" disabled>Install now</button></p>
+        </section>
+        <section>
+          <h4>Desktop (Chrome / Edge)</h4>
+          <ol>
+            <li>Click the <strong>Install</strong> icon in the address bar.</li>
+            <li>Open the installed app (separate window).</li>
+          </ol>
+        </section>
+      </div>
+      <p class="gate-note">Already installed? Open it from your Home Screen. Once installed, you won’t see this screen again.</p>
     </div>
   </div>
+
+  <!-- App container (hidden when not installed) -->
+  <div id="lwb-kjv-app" class="lwb-kjv"></div>
 
   <!-- Service worker registration -->
   <script>
@@ -162,91 +149,53 @@
     }
   </script>
 
-  <!-- PWA install logic (FAB visibility only on Genesis 1 + modal behavior) -->
+  <!-- PWA install gate logic (replaces FAB + modal) -->
   <script>
     (function(){
+      const gate = document.getElementById('lwb-install-gate');
+      const appRoot = document.getElementById('lwb-kjv-app');
+      const installBtn = document.getElementById('gate-install-now');
       let deferredPrompt = null;
-
-      const $ = (s, r=document)=>r.querySelector(s);
-      const fabWrap = $('#pwa-fab');
-      const fabBtn  = $('#pwa-fab-btn');
-      const modal   = $('#pwa-modal');
-      const closeBtn= $('#pwa-modal-close');
-      const installNowBtn = $('#pwa-install-now');
 
       const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
       const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-      function parseHash(){
-        const h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
-        if (h.length >= 3) {
-          const [bookSlug, c] = h;
-          return { book: bookSlug || '', chapter: parseInt(c, 10) || NaN };
-        }
-        return { book: 'genesis', chapter: 1 };
-      }
+      function showGate(){ gate.setAttribute('aria-hidden','false'); gate.style.display='grid'; if (appRoot) appRoot.style.display='none'; }
+      function hideGate(){ gate.setAttribute('aria-hidden','true'); gate.style.display='none'; if (appRoot) appRoot.style.display=''; }
 
-      function shouldShowFab(){
-        if (isStandalone()) return false;
-        const { book, chapter } = parseHash();
-        return (book === 'genesis' && chapter === 1);
-      }
-
-      function updateFab(){
-        if (!fabWrap) return;
-        fabWrap.style.display = shouldShowFab() ? 'block' : 'none';
-      }
-
-      function openModal(){
-        if (!modal) return;
-        modal.setAttribute('aria-hidden', 'false');
-        if (isStandalone()) {
-          if (installNowBtn) {
-            installNowBtn.disabled = true;
-            installNowBtn.textContent = 'Already installed';
-          }
-        } else {
-          if (installNowBtn) {
-            installNowBtn.disabled = false;
-            installNowBtn.textContent = 'Install now';
-          }
-        }
-      }
-
-      function closeModal(){
-        if (!modal) return;
-        modal.setAttribute('aria-hidden', 'true');
+      function updateGate(){
+        if (isStandalone()) { hideGate(); }
+        else { showGate(); }
       }
 
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        updateFab();
+        if (installBtn) installBtn.disabled = false;
       });
 
-      fabBtn && fabBtn.addEventListener('click', openModal);
-      closeBtn && closeBtn.addEventListener('click', closeModal);
-      modal && modal.addEventListener('click', (e)=>{ if (e.target === modal) closeModal(); });
-      window.addEventListener('keydown', (e)=>{ if (e.key === 'Escape') closeModal(); });
-
-      installNowBtn && installNowBtn.addEventListener('click', async ()=>{
-        if (!deferredPrompt) {
-          if (isIOS) alert('On iPhone: Share → “Add to Home Screen”.');
-          return;
+      installBtn && installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          try { await deferredPrompt.userChoice; } catch(_){}
+          deferredPrompt = null;
+        } else if (isIOS) {
+          alert('On iPhone: Share → “Add to Home Screen”.');
         }
-        deferredPrompt.prompt();
-        try { await deferredPrompt.userChoice; } catch(_){}
-        deferredPrompt = null;
-        closeModal();
       });
 
       window.addEventListener('appinstalled', () => {
-        closeModal();
-        updateFab();
+        try { localStorage.setItem('lwb_installed', '1'); } catch(_){}
+        hideGate();
+        // optional: reload to ensure standalone UI
+        // location.reload();
       });
 
-      window.addEventListener('hashchange', updateFab);
-      updateFab();
+      // Initial paint
+      updateGate();
+
+      // If user navigates to a new hash while in browser, keep gate up
+      window.addEventListener('hashchange', updateGate);
     })();
   </script>
 
@@ -260,32 +209,21 @@
 
     /* --------------------------------------------------------------------
        iOS PWA scroll-to-top hardening
-       - Disable native history scroll restoration
-       - Scroll the actual scroller element (document.scrollingElement)
-       - Double RAF + blur + scrollIntoView + tiny nudge (iOS quirk)
-       References: MDN History.scrollRestoration, Document.scrollingElement,
-       Element.scrollIntoView; known Safari issue when changing hash & re-render. 
        -------------------------------------------------------------------- */
     try { history.scrollRestoration = 'manual'; } catch {}
 
     function scrollToReaderTop(){
       const scroller = document.scrollingElement || document.documentElement || document.body;
       const rootEl = document.getElementById('lwb-kjv-app');
-
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
           }
-          // Primary jump
           try { scroller.scrollTo(0, 0); } catch { scroller.scrollTop = 0; }
-
-          // Fallback: force the reader to top of viewport
           if (rootEl && rootEl.scrollIntoView) {
             try { rootEl.scrollIntoView({ block: 'start' }); } catch { rootEl.scrollIntoView(); }
           }
-
-          // Tiny nudge for stubborn iOS PWA cases
           setTimeout(() => {
             try { scroller.scrollTo({ top: -1, left: 0, behavior: 'auto' }); } catch {
               scroller.scrollTop = 0;
@@ -296,10 +234,9 @@
         });
       });
     }
-    /* ------------------------------------------------------------------ */
 
     // ========================= CONFIG =========================
-    const LOGO_URL = '/assets/LivingWordBibles01.png'; // offline logo (ensure file exists)
+    const LOGO_URL = '/assets/LivingWordBibles01.png';
     const BASES = [
       'https://cdn.jsdelivr.net/gh/Living-Word-Bibles/the-holy-bible@main/Bible-kjv-master/',
       'https://raw.githubusercontent.com/Living-Word-Bibles/the-holy-bible/main/Bible-kjv-master/',
@@ -494,7 +431,7 @@
       }
     }
 
-    // ---- Template (Dice after verse dropdown; bottom pager above Share)
+    // ---- Template
     function appTemplate(){
       return `
         <div class="kjv__head">
@@ -510,7 +447,6 @@
 
             <select id="kjv-verse" class="kjv__select-verse" aria-label="Select verse"></select>
 
-            <!-- Dice immediately after verse dropdown -->
             <button id="kjv-dice" class="kjv__btn kjv__dice" type="button" title="Random verse" aria-label="Random verse">
               <span class="pip pip-1"></span><span class="pip pip-2"></span><span class="pip pip-3"></span>
               <span class="pip pip-4"></span><span class="pip pip-5"></span><span class="pip pip-6"></span>
@@ -540,7 +476,6 @@
           <div class="kjv__text" id="kjv-text"></div>
         </div>
 
-        <!-- Bottom pager (chapter-only; same handlers as top) -->
         <div id="kjv-bottom-pager" class="kjv__pager" aria-hidden="true">
           <button id="kjv-bottom-prev" class="kjv__btn" type="button">◀ Prev Chapter</button>
           <button id="kjv-bottom-next" class="kjv__btn" type="button">Next Chapter ▶</button>
@@ -574,7 +509,7 @@
     }
 
     function hashToRef(){
-      const h = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
+      const h = location.hash.replace(/^#\/??/, '').split('/').filter(Boolean);
       return (h.length>=3)?{bookSlug:h[0],chapter:+h[1],verse:+h[2]}:{bookSlug:'genesis',chapter:1,verse:1};
     }
 
@@ -666,22 +601,14 @@
       $('.kjv__ref', elRoot).textContent = `${book.name} ${state.passage.chapter}:${state.passage.verse}`;
       $('#kjv-text', elRoot).innerHTML = (state.view==='chapter') ? verseText : `<span class="verse">${verseText}</span>`;
 
-      // Apply controls
+      // Controls
       updateViewButton(); setFont(state.font);
       $('#kjv-go').addEventListener('click', ()=>{ const r = parseInput($('#kjv-passage').value, idx); if(r){ state.passage=r; render(); }});
       $('#kjv-passage').addEventListener('keydown', e=>{ if(e.key==='Enter'){ const r=parseInput(e.target.value, idx); if(r){ state.passage=r; render(); } }});
 
-      // Top Prev/Next (auto-scroll after render using hardened function)
-      const doPrev = async ()=>{
-        state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage);
-        await render();
-        scrollToReaderTop();
-      };
-      const doNext = async ()=>{
-        state.passage = (state.view==='chapter') ? await stepNextChapter(state.passage) : await stepNextVerse(state.passage);
-        await render();
-        scrollToReaderTop();
-      };
+      // Prev/Next
+      const doPrev = async ()=>{ state.passage = (state.view==='chapter') ? await stepPrevChapter(state.passage) : await stepPrevVerse(state.passage); await render(); scrollToReaderTop(); };
+      const doNext = async ()=>{ state.passage = (state.view==='chapter') ? await stepNextChapter(state.passage) : await stepNextVerse(state.passage); await render(); scrollToReaderTop(); };
       $('#kjv-prev').addEventListener('click', doPrev);
       $('#kjv-next').addEventListener('click', doNext);
 
@@ -712,7 +639,7 @@
 
       updateShareLinks(state.passage, book.name, $('.verse', elRoot)?.textContent || '');
 
-      // Bottom pager — shows only in Chapter view; *reuse* top handlers (so it scrolls too)
+      // Bottom pager
       const pager = document.getElementById('kjv-bottom-pager');
       if (pager) {
         pager.setAttribute('aria-hidden', state.view === 'chapter' ? 'false' : 'true');
